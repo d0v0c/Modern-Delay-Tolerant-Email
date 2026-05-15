@@ -57,6 +57,22 @@ sed -i 's/^#\s*auth_username_format.*/auth_username_format = %n/' /etc/dovecot/c
 mkdir -p /home/user/Maildir/{cur,new,tmp}
 chown -R user:user /home/user/Maildir
 
+# 定义退出函数
+cleanup() {
+    echo "[INFO] 收到退出信号，正在关闭服务..."
+    # 杀掉后台运行的 bpmail 脚本
+    pkill -f bpmail2postfix || true
+    
+    # 手动停止邮件服务，防止产生残留的 .pid 和 .lock 文件
+    service postfix stop
+    service dovecot stop
+    
+    echo "[INFO] 所有服务已安全关闭，容器退出。"
+    exit 0
+}
+# 捕获 SIGTERM (docker stop) 和 SIGINT (Ctrl+C) 信号，并路由给 cleanup 函数
+trap cleanup SIGTERM SIGINT
+
 service postfix start
 service dovecot start
 
@@ -77,4 +93,7 @@ echo "Mail server started with hostname: $FQDN"
 sed -i 's/^#\?\s*force_color_prompt=yes/force_color_prompt=yes/' ~/.bashrc
 
 # Keep container running
-tail -f /dev/null
+touch /var/log/mail.log /var/log/mail.err /var/log/syslog
+tail -f /var/log/mail.log /var/log/mail.err /var/log/syslog &
+# 当收到 SIGTERM 信号时，trap 会打断 wait，立刻执行 cleanup 函数
+wait

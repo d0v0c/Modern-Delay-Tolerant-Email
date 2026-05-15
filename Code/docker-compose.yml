@@ -36,43 +36,25 @@ services:
     cap_add:
       - NET_ADMIN
 
-  client-1:
-    build: ./mail-server
-    hostname: client-1
+  edge-proxy:
+    build: ./edge-proxy
     environment:
-      - HOSTNAME=client-1
-      - DOMAIN=a.com
-      - GATEWAY=172.21.0.2
-      - MOZ_ENABLE_WAYLAND=1
-      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY}
-      - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
-    volumes:
-      - ${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:ro
-      - /home/peanuts/Code/thunderbird-profile:/root/.thunderbird
+      - MAIL_1=172.21.0.3
+      - MAIL_2=172.22.0.3
+      - DELAY_1=172.21.0.2
+      - DELAY_2=172.22.0.2
     networks:
       mail-1_net:
         ipv4_address: 172.21.0.4
-    cap_add:
-      - NET_ADMIN
-
-  client-2:
-    build: ./mail-server
-    hostname: client-2
-    environment:
-      - HOSTNAME=client-2
-      - DOMAIN=a.com
-      - GATEWAY=172.22.0.2
-      - MOZ_ENABLE_WAYLAND=1
-      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY}
-      - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
-    volumes:
-      - ${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:ro
-      - /home/peanuts/Code/thunderbird-profile-2:/root/.thunderbird
-    networks:
       mail-2_net:
         ipv4_address: 172.22.0.4
     cap_add:
       - NET_ADMIN
+    ports:
+      - "10025:10025"
+      - "10143:10143"
+      - "20025:20025"
+      - "20143:20143"
 
 networks:
   mail-1_net:

@@ -1,6 +1,8 @@
-FROM wbitt/network-multitool
+FROM wbitt/network-multitool:latest
 
-COPY delay-server.sh /delay-server.sh
-RUN chmod +x /delay-server.sh
+RUN apk add --no-cache tini
 
-CMD ["/delay-server.sh"]
+WORKDIR /app
+COPY --chmod=755 delay-server.sh .
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["./delay-server.sh"]
